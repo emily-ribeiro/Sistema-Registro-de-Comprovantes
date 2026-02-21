@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registo de Lançamentos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f6f8f9; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .formulario-container, .grid-container { background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; }
+        .formulario-container { max-width: 450px; }
+        .grid-container { max-width: 700px; }
+        h2 { color: #284e3f; text-align: center; margin-top: 0; }
+        h3 { color: #434343; text-align: center; font-size: small; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #434343; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input[readonly] { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; }
+        button { width: 100%; padding: 12px; background-color: #284e3f; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #1c362c; }
+        .btn-pdf { background-color: #0056b3; }
+        .btn-pdf:hover { background-color: #004494; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #284e3f; color: white; }
+        .btn-excluir { background-color: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; width: auto; margin: 0; font-size: 12px; }
+        .btn-excluir:hover { background-color: #c82333; }
+        .linha-mes-ano { display: flex; gap: 10px; }
+        #loading { display: none; color: #0056b3; font-weight: bold; text-align: center; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="formulario-container">
+        <h2>Eixo Barretos</h2>
+        <h3>Registo de Comprovantes Sede Mundial</h3>
+        
+        <form id="formLancamento">
+            <div class="form-group">
+                <label for="data">Data do pagamento</label>
+                <input type="date" id="data" required>
+            </div>
+            <div class="form-group">
+                <label for="valor">Valor do Pagamento (R$)</label>
+                <input type="number" id="valor" step="0.01" placeholder="Ex: 279.00" required>
+            </div>
+            <div class="form-group">
+                <label for="campo">Campo</label>
+                <select id="campo" required>
+                    <option value="">Selecione um campo...</option>
+                    <option value="Adbras Barretos">Barretos</option>
+                    <option value="Adbras Bebedouro">Bebedouro</option>
+                    <option value="Adbras Dumont">Dumont</option>
+                    <option value="Adbras Franca">Franca</option>
+                    <option value="Adbras Guaira">Guaíra</option>
+                    <option value="Adbras Guariba">Guariba</option>
+                    <option value="Adbras Igarapava">Igarapava</option>
+                    <option value="Adbras Jaboticabal">Jaboticabal</option>
+                    <option value="Adbras Pitangueiras">Pitangueiras</option>
+                    <option value="Adbras Pradopolis">Pradópolis</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="comprovativo">Foto/Arquivo do Comprovativo</label>
+                <input type="file" id="comprovativo" accept="image/*,.pdf" required>
+            </div>
+
+            <div class="form-group">
+                <label for="pastor_pr">Pastor Presidente</label>
+                <input type="text" id="pastor_pr" placeholder="O pastor aparecerá aqui" required readonly>
+            </div>
+            <div class="form-group">
+                <label for="telefone">Telefone</label>
+                <input type="tel" id="telefone" placeholder="O telefone aparecerá aqui" required readonly>
+            </div>
+            <button type="submit" id="btnSubmit">Adicionar Lançamento</button>
+            <div id="loading">A guardar no Google Drive... Aguarde.</div>
+        </form>
+    </div>
+
+    <div class="grid-container">
+        <h2>Relatório de Lançamentos</h2>
+        <div class="linha-mes-ano">
+            <div class="form-group" style="flex: 1;">
+                <label for="mesRef">Mês</label>
+                <select id="mesRef">
+                    <option value="Janeiro">Janeiro</option>
+                    <option value="Fevereiro">Fevereiro</option>
+                    <option value="Março">Março</option>
+                    <option value="Abril">Abril</option>
+                    <option value="Maio">Maio</option>
+                    <option value="Junho">Junho</option>
+                    <option value="Julho">Julho</option>
+                    <option value="Agosto">Agosto</option>
+                    <option value="Setembro">Setembro</option>
+                    <option value="Outubro">Outubro</option>
+                    <option value="Novembro">Novembro</option>
+                    <option value="Dezembro">Dezembro</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="anoRef">Ano</label><input type="number" id="anoRef" value="2026" required>
+            </div>
+        </div>
+        <table>
+            <thead><tr><th>Data</th><th>Valor (R$)</th><th>Campo</th><th>Pastor</th><th>Ação</th></tr></thead>
+            <tbody id="corpoTabela"></tbody>
+        </table>
+        <button type="button" class="btn-pdf" id="btnGerarPdf">Gerar Relatório em PDF</button>
+    </div>
+
+    <script>
+        const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxobs63etV006-QW_eRdcA5semEvKoEx3EqK_fCKzduSQ-piHeGuWtGh59PXwdM-hFNig/exec";
+
+        // CORRIGIDO: Nomes iguais aos "value" do <select>
+        const dadosPorCampo = {
+            "Adbras Barretos": { pastor: "Adeliton Sales", telefone: "Sem telefone cadastrado" },
+            "Adbras Bebedouro": { pastor: "Carlos Pinto", telefone: "(16) 9 99755-8006" },
+            "Adbras Dumont": { pastor: "Francisco Sobrinho", telefone: "(16) 9 8194-5041" },
+            "Adbras Franca": { pastor: "Gileade Guidelli", telefone: "(16) 9 9119-4719" },
+            "Adbras Guaira": { pastor: "Gunnar Mendes", telefone: "(11) 9 4343-4757" },
+            "Adbras Guariba": { pastor: "Heber Antonio", telefone: "(16) 9 9302-1089" },
+            "Adbras Igarapava": { pastor: "Helton Ribeiro", telefone: "(11) 9 4704-0884" },
+            "Adbras Jaboticabal": { pastor: "Jose de Paula", telefone: "(16) 9 99116-0138" },
+            "Adbras Pitangueiras": { pastor: "Jose Francisco", telefone: "(34) 9 9947-6041" },
+            "Adbras Pradopolis": { pastor: "Eurimar Alves", telefone: "(16) 9 9741-2298" }
+        };
+
+        document.getElementById('campo').addEventListener('change', function() {
+            const campoSelecionado = this.value;
+            const campoPastor = document.getElementById('pastor_pr');
+            const campoTelefone = document.getElementById('telefone');
+            if (dadosPorCampo[campoSelecionado]) {
+                campoPastor.value = dadosPorCampo[campoSelecionado].pastor;
+                campoTelefone.value = dadosPorCampo[campoSelecionado].telefone;
+            } else {
+                campoPastor.value = "";
+                campoTelefone.value = "";
+            }
+        });
+
+        let listaLancamentos = [];
+
+        function lerArquivo(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        document.getElementById('formLancamento').addEventListener('submit', async function(evento) {
+            evento.preventDefault();
+            const btnSubmit = document.getElementById('btnSubmit');
+            const loading = document.getElementById('loading');
+            
+            btnSubmit.disabled = true;
+            loading.style.display = "block";
+
+            try {
+                const arquivoInput = document.getElementById('comprovativo').files[0];
+                const base64 = await lerArquivo(arquivoInput);
+                
+                const dataPura = document.getElementById('data').value;
+                const partesData = dataPura.split('-');
+                const dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
+                const valorFormatado = parseFloat(document.getElementById('valor').value).toFixed(2);
+
+                const resposta = await fetch(URL_GOOGLE_SCRIPT, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        acao: "upload", 
+                        nome: arquivoInput.name,
+                        type: arquivoInput.type,
+                        base64: base64,
+                        campo: document.getElementById('campo').value,
+                        pastor: document.getElementById('pastor_pr').value, // <--- Pastor enviado ao Script
+                        dataPagamento: dataFormatada,
+                        valor: valorFormatado
+                    })
+                });
+                
+                const resultadoDrive = await resposta.json();
+
+                if (resultadoDrive.sucesso) {
+                    const lancamento = {
+                        data: dataFormatada,
+                        valor: parseFloat(document.getElementById('valor').value),
+                        campo: document.getElementById('campo').value,
+                        comprovativoUrl: resultadoDrive.url, 
+                        fileId: resultadoDrive.fileId,
+                        pastor_pr: document.getElementById('pastor_pr').value,
+                        telefone: document.getElementById('telefone').value
+                    };
+
+                    listaLancamentos.push(lancamento);
+                    atualizarTabela();
+                    this.reset();
+                    alert("Lançamento guardado na pasta '" + lancamento.campo + "' com sucesso!");
+                } else {
+                    alert("Erro ao guardar no Drive: " + resultadoDrive.erro);
+                }
+            } catch (erro) {
+                alert("Erro na conexão ao enviar o arquivo.");
+                console.error(erro);
+            } finally {
+                btnSubmit.disabled = false;
+                loading.style.display = "none";
+            }
+        });
+
+        function atualizarTabela() {
+            const corpoTabela = document.getElementById('corpoTabela');
+            corpoTabela.innerHTML = "";
+            listaLancamentos.forEach((item, index) => {
+                const linha = document.createElement('tr');
+                linha.innerHTML = `
+                    <td>${item.data}</td>
+                    <td>R$ ${item.valor.toFixed(2).replace('.', ',')}</td>
+                    <td>${item.campo}</td>
+                    <td>${item.pastor_pr}</td>
+                    <td><button class="btn-excluir" onclick="excluirLancamento(${index})">Excluir</button></td>
+                `;
+                corpoTabela.appendChild(linha);
+            });
+        }
+
+        async function excluirLancamento(index) {
+            if(confirm("Tem certeza que deseja excluir? O comprovante também será movido para a lixeira do Drive.")) {
+                const lancamento = listaLancamentos[index];
+                const botoesExcluir = document.querySelectorAll('.btn-excluir');
+                botoesExcluir[index].innerText = "A apagar...";
+                botoesExcluir[index].disabled = true;
+
+                try {
+                    const resposta = await fetch(URL_GOOGLE_SCRIPT, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            acao: "excluir", 
+                            fileId: lancamento.fileId
+                        })
+                    });
+                    
+                    const resultado = await resposta.json();
+                    
+                    if(resultado.sucesso) {
+                        listaLancamentos.splice(index, 1);
+                        atualizarTabela();
+                        alert("Lançamento e comprovante excluídos!");
+                    } else {
+                        alert("Erro ao excluir do Drive: " + resultado.erro);
+                        atualizarTabela(); 
+                    }
+                } catch(e) {
+                    alert("Erro de conexão ao tentar excluir.");
+                    atualizarTabela();
+                }
+            }
+        }
+
+        document.getElementById('btnGerarPdf').addEventListener('click', function() {
+            if (listaLancamentos.length === 0) return alert("Não há lançamentos!");
+
+            const mes = document.getElementById('mesRef').value;
+            const ano = document.getElementById('anoRef').value;
+            
+            let relatorioHtml = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="text-align: center; color: #284e3f;">Relatório de Lançamentos - ${mes}/${ano}</h2>
+                    <br>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <thead>
+                            <tr style="background-color: #284e3f; color: white;">
+                                <th style="border: 1px solid #ddd; padding: 8px;">Data</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Valor</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Campo</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Pastor</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Comprovante</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            let total = 0;
+            listaLancamentos.forEach(item => {
+                total += item.valor;
+                relatorioHtml += `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${item.data}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">R$ ${item.valor.toFixed(2).replace('.', ',')}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${item.campo}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${item.pastor_pr}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                            <a href="${item.comprovativoUrl}" target="_blank" style="color: #0056b3; text-decoration: none; font-weight: bold;">Abrir Anexo</a>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            relatorioHtml += `
+                        </tbody>
+                        <tfoot>
+                            <tr style="background-color: #f6f8f9; font-weight: bold;">
+                                <td colspan="4" style="text-align: right; border: 1px solid #ddd; padding: 8px;">Total Arrecadado:</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">R$ ${total.toFixed(2).replace('.', ',')}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Relatorio_${mes}_${ano}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(relatorioHtml).save();
+        });
+    </script>
+</body>
+</html>
