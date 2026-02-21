@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registo de Lançamentos</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -392,68 +393,53 @@
             const mes = document.getElementById('mesRef').value;
             const ano = document.getElementById('anoRef').value;
 
-            let relatorioHtml = `
-                <div style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="text-align: center; color: #284e3f;">Relatório de Lançamentos - ${mes}/${ano}</h2>
-                    <br>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                        <thead>
-                            <tr style="background-color: #284e3f; color: white;">
-                                <th style="border: 1px solid #ddd; padding: 8px;">Data</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">Valor</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">Campo</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">Pastor</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">Comprovante</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+            const doc = new jspdf.jsPDF('landscape');
+
+            doc.setFontSize(18);
+            doc.setTextColor(40, 78, 63);
+            doc.text(`Relatório de Lançamentos - ${mes}/${ano}`, 14, 22);
+
+            const tableColumn = ["Data", "Valor", "Campo", "Pastor", "Comprovante"];
+            const tableRows = [];
 
             let total = 0;
-            listaLancamentos.forEach(item => {
+            listaLancamentos.forEach((item) => {
                 total += item.valor;
-                relatorioHtml += `
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${item.data}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">R$ ${item.valor.toFixed(2).replace('.', ',')}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${item.campo}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${item.pastor_pr}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
-                            <a href="${item.comprovativoUrl}" target="_blank" style="color: #0056b3; text-decoration: none; font-weight: bold;">Abrir Anexo</a>
-                        </td>
-                    </tr>
-                `;
+                const row = [
+                    item.data,
+                    `R$ ${item.valor.toFixed(2).replace('.', ',')}`,
+                    item.campo,
+                    item.pastor_pr,
+                    "Abrir Anexo"
+                ];
+                tableRows.push(row);
             });
 
-            relatorioHtml += `
-                        </tbody>
-                        <tfoot>
-                            <tr style="background-color: #f6f8f9; font-weight: bold;">
-                                <td colspan="4" style="text-align: right; border: 1px solid #ddd; padding: 8px;">Total Arrecadado:</td>
-                                <td style="border: 1px solid #ddd; padding: 8px;">R$ ${total.toFixed(2).replace('.', ',')}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            `;
+            tableRows.push([
+                { content: 'Total Arrecadado:', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } },
+                { content: `R$ ${total.toFixed(2).replace('.', ',')}`, styles: { fontStyle: 'bold' } }
+            ]);
 
-            const opt = {
-                margin: 10,
-                filename: `Relatorio_${mes}_${ano}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    letterRendering: true,
-                    windowWidth: 1200
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 30,
+                theme: 'grid',
+                headStyles: { fillColor: [40, 78, 63] },
+                styles: { fontSize: 10, cellPadding: 4 },
+                columnStyles: {
+                    4: { textColor: [0, 86, 179], fontStyle: 'bold', halign: 'center' }
                 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-            };
+                didDrawCell: function (data) {
+                    if (data.section === 'body' && data.column.index === 4 && data.row.index < listaLancamentos.length) {
+                        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, {
+                            url: listaLancamentos[data.row.index].comprovativoUrl
+                        });
+                    }
+                }
+            });
 
-            const container = document.createElement('div');
-            container.innerHTML = relatorioHtml;
-            html2pdf().set(opt).from(container).save();
+            doc.save(`Relatorio_${mes}_${ano}.pdf`);
         });
     </script>
 </body>
