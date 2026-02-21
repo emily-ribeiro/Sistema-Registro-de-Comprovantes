@@ -1,40 +1,158 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registo de Lançamentos</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f6f8f9; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
-        .formulario-container, .grid-container { background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; }
-        .formulario-container { max-width: 450px; }
-        .grid-container { max-width: 700px; }
-        h2 { color: #284e3f; text-align: center; margin-top: 0; }
-        h3 { color: #434343; text-align: center; font-size: small; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #434343; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        input[readonly] { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; }
-        button { width: 100%; padding: 12px; background-color: #284e3f; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 10px; }
-        button:hover { background-color: #1c362c; }
-        .btn-pdf { background-color: #0056b3; }
-        .btn-pdf:hover { background-color: #004494; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #284e3f; color: white; }
-        .btn-excluir { background-color: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; width: auto; margin: 0; font-size: 12px; }
-        .btn-excluir:hover { background-color: #c82333; }
-        .linha-mes-ano { display: flex; gap: 10px; }
-        #loading { display: none; color: #0056b3; font-weight: bold; text-align: center; margin-top: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f8f9;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .formulario-container,
+        .grid-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .formulario-container {
+            max-width: 450px;
+        }
+
+        .grid-container {
+            max-width: 700px;
+        }
+
+        h2 {
+            color: #284e3f;
+            text-align: center;
+            margin-top: 0;
+        }
+
+        h3 {
+            color: #434343;
+            text-align: center;
+            font-size: small;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #434343;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[readonly] {
+            background-color: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #284e3f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #1c362c;
+        }
+
+        .btn-pdf {
+            background-color: #0056b3;
+        }
+
+        .btn-pdf:hover {
+            background-color: #004494;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #284e3f;
+            color: white;
+        }
+
+        .btn-excluir {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+            font-size: 12px;
+        }
+
+        .btn-excluir:hover {
+            background-color: #c82333;
+        }
+
+        .linha-mes-ano {
+            display: flex;
+            gap: 10px;
+        }
+
+        #loading {
+            display: none;
+            color: #0056b3;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="formulario-container">
         <h2>Eixo Barretos</h2>
         <h3>Registo de Comprovantes Sede Mundial</h3>
-        
+
         <form id="formLancamento">
             <div class="form-group">
                 <label for="data">Data do pagamento</label>
@@ -104,7 +222,15 @@
             </div>
         </div>
         <table>
-            <thead><tr><th>Data</th><th>Valor (R$)</th><th>Campo</th><th>Pastor</th><th>Ação</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Valor (R$)</th>
+                    <th>Campo</th>
+                    <th>Pastor</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
             <tbody id="corpoTabela"></tbody>
         </table>
         <button type="button" class="btn-pdf" id="btnGerarPdf">Gerar Relatório em PDF</button>
@@ -127,7 +253,7 @@
             "Adbras Pradopolis": { pastor: "Eurimar Alves", telefone: "(16) 9 9741-2298" }
         };
 
-        document.getElementById('campo').addEventListener('change', function() {
+        document.getElementById('campo').addEventListener('change', function () {
             const campoSelecionado = this.value;
             const campoPastor = document.getElementById('pastor_pr');
             const campoTelefone = document.getElementById('telefone');
@@ -151,18 +277,18 @@
             });
         }
 
-        document.getElementById('formLancamento').addEventListener('submit', async function(evento) {
+        document.getElementById('formLancamento').addEventListener('submit', async function (evento) {
             evento.preventDefault();
             const btnSubmit = document.getElementById('btnSubmit');
             const loading = document.getElementById('loading');
-            
+
             btnSubmit.disabled = true;
             loading.style.display = "block";
 
             try {
                 const arquivoInput = document.getElementById('comprovativo').files[0];
                 const base64 = await lerArquivo(arquivoInput);
-                
+
                 const dataPura = document.getElementById('data').value;
                 const partesData = dataPura.split('-');
                 const dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
@@ -171,7 +297,7 @@
                 const resposta = await fetch(URL_GOOGLE_SCRIPT, {
                     method: 'POST',
                     body: JSON.stringify({
-                        acao: "upload", 
+                        acao: "upload",
                         nome: arquivoInput.name,
                         type: arquivoInput.type,
                         base64: base64,
@@ -181,7 +307,7 @@
                         valor: valorFormatado
                     })
                 });
-                
+
                 const resultadoDrive = await resposta.json();
 
                 if (resultadoDrive.sucesso) {
@@ -189,7 +315,7 @@
                         data: dataFormatada,
                         valor: parseFloat(document.getElementById('valor').value),
                         campo: document.getElementById('campo').value,
-                        comprovativoUrl: resultadoDrive.url, 
+                        comprovativoUrl: resultadoDrive.url,
                         fileId: resultadoDrive.fileId,
                         pastor_pr: document.getElementById('pastor_pr').value,
                         telefone: document.getElementById('telefone').value
@@ -228,7 +354,7 @@
         }
 
         async function excluirLancamento(index) {
-            if(confirm("Tem certeza que deseja excluir? O comprovante também será movido para a lixeira do Drive.")) {
+            if (confirm("Tem certeza que deseja excluir? O comprovante também será movido para a lixeira do Drive.")) {
                 const lancamento = listaLancamentos[index];
                 const botoesExcluir = document.querySelectorAll('.btn-excluir');
                 botoesExcluir[index].innerText = "A apagar...";
@@ -238,34 +364,34 @@
                     const resposta = await fetch(URL_GOOGLE_SCRIPT, {
                         method: 'POST',
                         body: JSON.stringify({
-                            acao: "excluir", 
+                            acao: "excluir",
                             fileId: lancamento.fileId
                         })
                     });
-                    
+
                     const resultado = await resposta.json();
-                    
-                    if(resultado.sucesso) {
+
+                    if (resultado.sucesso) {
                         listaLancamentos.splice(index, 1);
                         atualizarTabela();
                         alert("Lançamento e comprovante excluídos!");
                     } else {
                         alert("Erro ao excluir do Drive: " + resultado.erro);
-                        atualizarTabela(); 
+                        atualizarTabela();
                     }
-                } catch(e) {
+                } catch (e) {
                     alert("Erro de conexão ao tentar excluir.");
                     atualizarTabela();
                 }
             }
         }
 
-        document.getElementById('btnGerarPdf').addEventListener('click', function() {
+        document.getElementById('btnGerarPdf').addEventListener('click', function () {
             if (listaLancamentos.length === 0) return alert("Não há lançamentos!");
 
             const mes = document.getElementById('mesRef').value;
             const ano = document.getElementById('anoRef').value;
-            
+
             let relatorioHtml = `
                 <div style="font-family: Arial, sans-serif; padding: 20px;">
                     <h2 style="text-align: center; color: #284e3f;">Relatório de Lançamentos - ${mes}/${ano}</h2>
@@ -315,12 +441,21 @@
                 margin: 10,
                 filename: `Relatorio_${mes}_${ano}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    letterRendering: true,
+                    windowWidth: 1200
+                },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
 
-            html2pdf().set(opt).from(relatorioHtml).save();
+            const container = document.createElement('div');
+            container.innerHTML = relatorioHtml;
+            html2pdf().set(opt).from(container).save();
         });
     </script>
 </body>
+
 </html>
