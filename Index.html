@@ -267,7 +267,7 @@
             const ano = document.getElementById('anoRef').value;
             
             let relatorioHtml = `
-                <div style="font-family: Arial, sans-serif; padding: 20px; width: 1000px; background-color: #ffffff;">
+                <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #ffffff; width: max-content; min-width: 100%;">
                     <h2 style="text-align: center; color: #284e3f;">Relatório de Lançamentos - ${mes}/${ano}</h2>
                     <br>
                     <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
@@ -315,7 +315,12 @@
                 margin: 10,
                 filename: `Relatorio_${mes}_${ano}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, windowWidth: 1200 }, // Força a largura de um ecrã de PC
+                html2canvas: { 
+                    scale: 2, 
+                    windowWidth: 1000,
+                    scrollX: 0, 
+                    scrollY: 0 
+                },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
 
